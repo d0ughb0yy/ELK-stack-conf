@@ -1,36 +1,5 @@
 # Filebeat Configuration
 
-filebeat.inputs:
-  # SSH Logs Input
-  - type: filestream
-    id: ssh-log
-    enabled: true
-    paths:
-      - /var/log/auth.log
-    fields:
-      log_type: auth
-    processors:
-      - dissect:
-          tokenizer: "%{timestamp} %{+timestamp} %{+timestamp} %{hostname} %{program}: %{message}"
-          field: "message"
-          target_prefix: "ssh"
-          ignore_failure: true
-
-  # Syslog Logs Input
-  - type: filestream
-    id: syslog
-    enabled: true
-    paths:
-      - /var/log/syslog
-    fields:
-      log_type: syslog
-    processors:
-      - dissect:
-          tokenizer: "%{timestamp} %{+timestamp} %{+timestamp} %{hostname} %{program}: %{message}"
-          field: "message"
-          target_prefix: "syslog"
-          ignore_failure: true
-
 # Output to Logstash
 output.logstash:
   hosts: ["192.168.1.49:5044"]  # Your Logstash host IP and port
@@ -43,3 +12,14 @@ logging.files:
   name: filebeat.log
   keepfiles: 7
   permissions: 0644
+
+# Enable Filebeat system module for SSH logs
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+
+# Ensure system module is enabled for SSH logs
+filebeat.modules:
+  - module: system
+    auth:
+      enabled: true
+      var.paths: ["/var/log/auth.log"]
